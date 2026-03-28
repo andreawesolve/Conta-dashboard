@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unidad Conta — We Solve</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0f0f11;--surface:#18181c;--surface2:#222228;--border:#2e2e38;
+    --accent:#c8f060;--accent2:#60c8f0;--warn:#f0b060;--danger:#f06060;
+    --text:#e8e8ec;--text-muted:#7a7a8a;--text-dim:#4a4a5a;
+    --green:#60f0a0;--purple:#c060f0;--radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px 48px;}
+  .header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px;}
+  .header-left h1{font-family:'DM Serif Display',serif;font-size:clamp(22px,5vw,34px);letter-spacing:-.5px;line-height:1;}
+  .header-left h1 span{color:var(--accent);font-style:italic;}
+  .header-left p{font-size:11px;color:var(--text-muted);margin-top:6px;font-family:'DM Mono',monospace;letter-spacing:.05em;}
+  .header-right{display:flex;gap:6px;flex-wrap:wrap;}
+  .tab-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#0f0f11;font-weight:600;}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:24px;}
+  .summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;overflow:hidden;}
+  .summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .s-green::before{background:var(--green);}.s-accent::before{background:var(--accent);}
+  .s-blue::before{background:var(--accent2);}.s-warn::before{background:var(--warn);}
+  .s-danger::before{background:var(--danger);}
+  .summary-card .num{font-family:'DM Serif Display',serif;font-size:28px;line-height:1;margin-bottom:4px;}
+  .summary-card .label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
+  .view{display:none;}.view.active{display:block;}
+
+  /* CÉLULAS */
+  .cells-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;}
+  .cell-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s;animation:fadeUp .3s ease both;}
+  .cell-card:hover{border-color:var(--accent);}
+  .cell-card:nth-child(2){animation-delay:.04s}.cell-card:nth-child(3){animation-delay:.08s}
+  .cell-card:nth-child(4){animation-delay:.12s}.cell-card:nth-child(5){animation-delay:.16s}
+  .cell-card:nth-child(6){animation-delay:.20s}.cell-card:nth-child(7){animation-delay:.24s}
+  .cell-card:nth-child(8){animation-delay:.28s}
+  .cell-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .cell-pm-name{font-weight:600;font-size:14px;}
+  .cell-pm-sub{font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:2px;display:flex;gap:5px;align-items:center;}
+  .pmt-tag{color:var(--warn);font-size:9px;background:rgba(240,176,96,.12);padding:1px 5px;border-radius:3px;border:1px solid rgba(240,176,96,.25);}
+  .capacity-badge{font-family:'DM Mono',monospace;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+  .cap-ok{background:rgba(96,240,160,.12);color:var(--green);border:1px solid rgba(96,240,160,.25);}
+  .cap-warn{background:rgba(240,176,96,.12);color:var(--warn);border:1px solid rgba(240,176,96,.25);}
+  .cap-over{background:rgba(240,96,96,.12);color:var(--danger);border:1px solid rgba(240,96,96,.25);}
+  .cap-bar-wrap{padding:8px 16px;border-bottom:1px solid var(--border);}
+  .cap-bar-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-bottom:4px;}
+  .cap-bar{height:3px;background:var(--border);border-radius:4px;overflow:hidden;}
+  .cap-bar-fill{height:100%;border-radius:4px;}
+  .fill-ok{background:var(--green);}.fill-warn{background:var(--warn);}.fill-over{background:var(--danger);}
+  .members-list{padding:6px 0;}
+  .member-row{display:flex;align-items:center;padding:6px 16px;gap:8px;transition:background .15s;}
+  .member-row:hover{background:var(--surface2);}
+  .lv{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;padding:2px 6px;border-radius:4px;min-width:46px;text-align:center;flex-shrink:0;}
+  .lv-pm{background:rgba(200,240,96,.15);color:var(--accent);border:1px solid rgba(200,240,96,.3);}
+  .lv-pmt{background:rgba(240,176,96,.12);color:var(--warn);border:1px solid rgba(240,176,96,.25);}
+  .lv-esp{background:rgba(96,200,240,.15);color:var(--accent2);border:1px solid rgba(96,200,240,.3);}
+  .lv-ana{background:rgba(160,160,200,.12);color:#b0b0d0;border:1px solid rgba(160,160,200,.25);}
+  .lv-t0{background:rgba(240,96,96,.12);color:var(--danger);border:1px solid rgba(240,96,96,.25);}
+  .lv-t1{background:rgba(240,176,96,.12);color:var(--warn);border:1px solid rgba(240,176,96,.25);}
+  .lv-t2{background:rgba(96,240,160,.12);color:var(--green);border:1px solid rgba(96,240,160,.25);}
+  .mname{font-size:12px;flex:1;min-width:0;}
+  .no-m{font-size:8px;color:var(--warn);background:rgba(240,176,96,.1);border:1px solid rgba(240,176,96,.2);padding:1px 4px;border-radius:3px;margin-left:3px;}
+  .m-arr{font-size:9px;color:var(--text-dim);margin-left:3px;}
+
+  /* TENDENCIA — puntitos */
+  .trend-dots{display:flex;gap:2px;align-items:center;flex-shrink:0;}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .dot-AZUL{background:#60a0ff;} .dot-MORADO{background:#c060f0;}
+  .dot-VERDE{background:var(--green);} .dot-AMARILLO{background:var(--warn);}
+  .dot-ROJO{background:var(--danger);} .dot-nd{background:var(--border);}
+
+  /* flecha tendencia */
+  .trend-arrow{font-size:11px;margin-left:2px;}
+  .arr-up{color:var(--green);} .arr-down{color:var(--danger);} .arr-flat{color:var(--text-muted);}
+
+  /* TENDENCIA VIEW */
+  .trend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+  .trend-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .trend-card-head{padding:12px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+  .trend-name{font-size:13px;font-weight:600;}
+  .trend-meta{font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:2px;}
+  .trend-body{padding:12px 14px;}
+  .trend-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .trend-mes{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);width:24px;flex-shrink:0;}
+  .trend-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .trend-bar-fill{height:100%;border-radius:3px;transition:width .4s;}
+  .trend-val{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);width:32px;text-align:right;flex-shrink:0;}
+  .trend-sc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .consistency-badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 8px;border-radius:20px;}
+  .cb-alta{background:rgba(96,240,160,.15);color:var(--green);border:1px solid rgba(96,240,160,.3);}
+  .cb-media{background:rgba(240,176,96,.12);color:var(--warn);border:1px solid rgba(240,176,96,.25);}
+  .cb-baja{background:rgba(240,96,96,.12);color:var(--danger);border:1px solid rgba(240,96,96,.25);}
+  .cb-nueva{background:rgba(74,74,90,.3);color:var(--text-dim);border:1px solid var(--border);}
+
+  /* GRAD */
+  .grad-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;overflow-x:auto;}
+  .grad-table{width:100%;border-collapse:collapse;min-width:700px;}
+  .grad-table th{text-align:left;padding:10px 14px;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--surface2);font-family:'DM Mono',monospace;}
+  .grad-table td{padding:9px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .grad-table tr:last-child td{border-bottom:none;}
+  .grad-table tr:hover td{background:var(--surface2);}
+  .ni{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:6px;width:48px;font-family:'DM Mono',monospace;font-size:11px;text-align:center;}
+  .ni:focus{outline:none;border-color:var(--accent);}
+  .rb{font-family:'DM Mono',monospace;font-size:9px;padding:3px 9px;border-radius:20px;}
+  .rb-yes{background:rgba(96,240,160,.15);color:var(--green);border:1px solid rgba(96,240,160,.3);}
+  .rb-no{background:rgba(74,74,90,.3);color:var(--text-dim);border:1px solid var(--border);}
+  .rb-soon{background:rgba(240,176,96,.12);color:var(--warn);border:1px solid rgba(240,176,96,.3);}
+
+  /* MENTOR */
+  .mentor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+  .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .mc-head{padding:12px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+  .mc-name{font-size:13px;font-weight:600;}
+  .mc-cell{font-size:10px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:2px;}
+  .mc-flag{font-size:9px;color:var(--warn);background:rgba(240,176,96,.1);border:1px solid rgba(240,176,96,.2);padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace;}
+  .mt-row{display:flex;align-items:center;gap:7px;padding:7px 14px;font-size:12px;border-bottom:1px solid var(--border);}
+  .mt-row:last-child{border-bottom:none;}
+  .mc-empty{padding:12px 14px;font-size:11px;color:var(--warn);font-style:italic;}
+
+  /* legend */
+  .kpi-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:10px;font-family:'DM Mono',monospace;align-items:center;}
+  .kpi-legend span{display:flex;align-items:center;gap:4px;}
+
+  .sec{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-family:'DM Mono',monospace;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .sec::after{content:'';flex:1;height:1px;background:var(--border);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Unidad <span>Conta</span></h1>
+    <p>WE SOLVE · CAPACIDAD + KPIs OCT 2025 – FEB 2026</p>
+  </div>
+  <div class="header-right">
+    <button class="tab-btn active" onclick="showView('cells',this)">Células</button>
+    <button class="tab-btn" onclick="showView('trend',this)">Tendencia</button>
+    <button class="tab-btn" onclick="showView('grad',this)">Graduación</button>
+    <button class="tab-btn" onclick="showView('mentors',this)">Mentoría</button>
+  </div>
+</div>
+
+<div class="summary-grid" id="SG"></div>
+
+<!-- CÉLULAS -->
+<div class="view active" id="view-cells">
+  <div class="kpi-legend">
+    <strong style="color:var(--text-muted);margin-right:2px">KPI (puntitos = Oct→Feb):</strong>
+    <span><span class="dot dot-AZUL"></span>AZUL &gt;101%</span>
+    <span><span class="dot dot-VERDE"></span>VERDE 94-100%</span>
+    <span><span class="dot dot-AMARILLO"></span>AMARILLO 85-93%</span>
+    <span><span class="dot dot-ROJO"></span>ROJO &lt;85%</span>
+    <span><span class="dot dot-nd"></span>Sin dato</span>
+    <span style="margin-left:6px;color:var(--text-muted)">▲ subiendo · ▼ bajando · → estable</span>
+  </div>
+  <div class="sec">Células de trabajo</div>
+  <div class="cells-grid" id="CG"></div>
+</div>
+
+<!-- TENDENCIA -->
+<div class="view" id="view-trend">
+  <div class="kpi-legend">
+    <strong style="color:var(--text-muted);margin-right:4px">Consistencia:</strong>
+    <span><span class="consistency-badge cb-alta">ALTA</span> ≥4 meses AZUL/VERDE</span>
+    <span><span class="consistency-badge cb-media">MEDIA</span> mix con bajadas ocasionales</span>
+    <span><span class="consistency-badge cb-baja">BAJA</span> ROJO recurrente o caída</span>
+    <span><span class="consistency-badge cb-nueva">NUEVA</span> menos de 3 meses de dato</span>
+  </div>
+  <div class="sec">Histórico por persona — Oct 2025 a Feb 2026</div>
+  <div class="trend-grid" id="TG"></div>
+</div>
+
+<!-- GRADUACIÓN -->
+<div class="view" id="view-grad">
+  <div class="sec">Tracker de graduación — Trainings activos</div>
+  <div class="grad-wrap">
+    <table class="grad-table">
+      <thead><tr>
+        <th>Nombre</th><th>Nivel</th><th>Célula</th><th>Mentor</th>
+        <th>Tendencia</th><th>Total Feb</th>
+        <th>Meses</th><th>Incidencias</th><th>¿Listo?</th>
+      </tr></thead>
+      <tbody id="GT"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MENTORÍA -->
+<div class="view" id="view-mentors">
+  <div class="sec">Mapa de mentoría — Especializados</div>
+  <div class="mentor-grid" id="MG"></div>
+</div>
+
+<script>
+// ─── HISTÓRICO KPI Oct-Nov-Dic-Ene-Feb ───────────────────────────────────────
+const HIST = {
+  // PMs
+  'Abraham Gutiérrez':    {h:['ROJO','AMARILLO','ROJO',null,'ROJO']},
+  'Ricardo Yovis':        {h:['VERDE','VERDE','AMARILLO',null,'ROJO']},
+  'Leonardo Arellano':    {h:['AMARILLO','AMARILLO','ROJO',null,'ROJO']},
+  'Miriam Torres':        {h:['AMARILLO','ROJO','ROJO',null,'ROJO']},
+  'Bruno Rocha':          {h:['ROJO','ROJO','ROJO',null,'ROJO']},
+  'Paola García':         {h:['AMARILLO','AMARILLO','AMARILLO',null,'ROJO']},
+  'Leonardo López':       {h:['AMARILLO','VERDE','AMARILLO',null,'ROJO']},
+  'Roxana Villaseñor':    {h:['VERDE','AMARILLO','VERDE',null,'ROJO']},
+  // Especializados
+  'Luis Enrique A.':      {h:['VERDE','ROJO','AZUL',null,'AMARILLO']},
+  'Daniel Galván':        {h:['AZUL','VERDE','VERDE',null,'VERDE']},
+  'Ángel Canul':          {h:['AZUL','AMARILLO','AMARILLO',null,'VERDE']},
+  'Jessica Robles':       {h:['ROJO','AMARILLO','AMARILLO',null,'AZUL']},
+  'Daniela Garibaldo':    {h:['AMARILLO','AZUL','VERDE',null,'AZUL']},
+  'Xavier Castillo':      {h:['VERDE','AMARILLO','AZUL',null,'AZUL']},
+  // Analistas
+  'Yajaira Lupercio':     {h:['VERDE','AZUL','AZUL',null,'AZUL']},
+  'Juan González':        {h:['AZUL','AZUL','AZUL',null,'AZUL']},
+  'Kevin De la C.':       {h:['AZUL','AMARILLO','AZUL',null,'AZUL']},
+  'Agustín Castro':       {h:['VERDE','AMARILLO','VERDE',null,'AZUL']},
+  'Alejandro Zúñiga':     {h:['VERDE','VERDE','VERDE',null,'AZUL']},
+  'Iván Muñoz':           {h:['VERDE','VERDE','AZUL',null,'VERDE']},
+  'Carolyne López':       {h:['VERDE','VERDE','VERDE',null,'VERDE']},
+  'Yamile Canul':         {h:['VERDE','AZUL','AZUL',null,'AZUL']},
+  'Luis Mario Cataño':    {h:['AZUL','VERDE','AZUL',null,'VERDE']},
+  'David Jara':           {h:['VERDE','AZUL','VERDE',null,'VERDE']},
+  'Ángeles Mireles':      {h:['AZUL','AMARILLO','VERDE',null,'VERDE']},
+  'Leslie Quezada':       {h:['AMARILLO','ROJO','AZUL',null,'VERDE']},
+  'Brenda Navarro':       {h:['VERDE','AMARILLO','VERDE',null,'AZUL']},
+  'José Gabriel Fajardo': {h:['AZUL','AZUL','VERDE',null,'VERDE']},
+  'Jesús Pérez Santiz':   {h:[null,null,null,null,'AZUL']},
+  // Trainings
+  'Cristofer DlTorre':    {h:['AZUL','ROJO','AMARILLO',null,'AZUL']},
+  'Darinka Quezada':      {h:['AMARILLO','AMARILLO','AZUL',null,'VERDE']},
+  'Ángel Estrella':       {h:[null,null,null,null,null]},
+  'Misael Martínez':      {h:[null,null,null,null,null]},
+  'Lizeth Delgado':       {h:[null,null,null,null,null]},
+  'Montserrat Temoltzi':  {h:['AMARILLO','VERDE','AMARILLO',null,'AZUL']},
+  'Brayan Corona':        {h:[null,null,null,null,'VERDE']},
+  'Daniel Gómez':         {h:['VERDE','VERDE','VERDE',null,'VERDE']},
+  'Noemi Ruvalcaba':      {h:['AMARILLO','AMARILLO','ROJO',null,'VERDE']},
+  'Sandra Cámara':        {h:[null,null,null,null,null]},
+  'Jonatan Hernández':    {h:[null,null,null,null,null]},
+  'Alma Ortega':          {h:['VERDE','AMARILLO','VERDE',null,'VERDE']},
+  'Anahí Calderón':       {h:[null,null,'ROJO',null,'AMARILLO']},
+  'Castalia Pérez':       {h:['VERDE','VERDE','VERDE',null,'VERDE']},
+};
+
+const MESES = ['Oct','Nov','Dic','Ene','Feb'];
+
+// ─── MODELO ──────────────────────────────────────────────────────────────────
+const RH={PM:0,'PM-T':0,Especializado:10.3,Analista:10.3,T2:10.3,T1:19,T0:31};
+const FH={PM:0,'PM-T':0,Especializado:12,Analista:16,T2:15,T1:22,T0:30};
+const AVAIL=176;
+
+const CELLS=[
+  {pm:'Abraham Gutiérrez',pt:'PM',members:[
+    {n:'Agustín Castro',    lv:'Analista',     m:null},
+    {n:'Alejandro Zúñiga',  lv:'Analista',     m:null},
+    {n:'Cristofer DlTorre', lv:'T0',           m:null},
+    {n:'Darinka Quezada',   lv:'T0',           m:null},
+  ]},
+  {pm:'Ricardo Yovis',pt:'PM',members:[
+    {n:'Juan González',     lv:'Analista',     m:null},
+    {n:'Yajaira Lupercio',  lv:'Analista',     m:null},
+    {n:'Kevin De la C.',    lv:'Analista',     m:null},
+    {n:'Ángel Estrella',    lv:'T0',           m:null},
+  ]},
+  {pm:'Leonardo Arellano',pt:'PM',members:[
+    {n:'Daniel Galván',     lv:'Especializado',m:'Jonatan Hernández'},
+    {n:'Yamile Canul',      lv:'Analista',     m:null},
+    {n:'Luis Mario Cataño', lv:'Analista',     m:null},
+    {n:'Jonatan Hernández', lv:'T2',           m:'Daniel Galván'},
+  ]},
+  {pm:'Miriam Torres',pt:'PM',members:[
+    {n:'Daniela Garibaldo',   lv:'Especializado',m:'Misael Martínez'},
+    {n:'Jessica Robles',      lv:'Especializado',m:null},
+    {n:'Misael Martínez',     lv:'T0',           m:'Daniela Garibaldo'},
+    {n:'Lizeth Delgado',      lv:'T0',           m:null},
+    {n:'Montserrat Temoltzi', lv:'T0',           m:null},
+  ]},
+  {pm:'Bruno Rocha',pt:'PM-T',members:[
+    {n:'David Jara',      lv:'Analista',m:null},
+    {n:'Leslie Quezada',  lv:'Analista',m:null},
+    {n:'Carolyne López',  lv:'Analista',m:null},
+    {n:'Brayan Corona',   lv:'T0',      m:null},
+  ]},
+  {pm:'Paola García',pt:'PM',members:[
+    {n:'Ángel Canul',     lv:'Especializado',m:'Noemi Ruvalcaba'},
+    {n:'Xavier Castillo', lv:'Especializado',m:'Sandra Cámara'},
+    {n:'Ángeles Mireles', lv:'Analista',     m:null},
+    {n:'Daniel Gómez',    lv:'T0',           m:null},
+    {n:'Noemi Ruvalcaba', lv:'T1',           m:'Ángel Canul'},
+    {n:'Sandra Cámara',   lv:'T0',           m:'Xavier Castillo'},
+  ]},
+  {pm:'Leonardo López',pt:'PM',members:[
+    {n:'Luis Enrique A.',       lv:'Especializado',m:'Jesús Pérez Santiz'},
+    {n:'José Gabriel Fajardo',  lv:'Analista',     m:null},
+    {n:'Iván Muñoz',            lv:'Analista',     m:null},
+    {n:'Brenda Navarro',        lv:'Analista',     m:null},
+    {n:'Jesús Pérez Santiz',    lv:'Analista',     m:'Luis Enrique A.'},
+  ]},
+  {pm:'Roxana Villaseñor',pt:'PM-T',members:[
+    {n:'Castalia Pérez',  lv:'Analista',m:null},
+    {n:'Alma Ortega',     lv:'T2',      m:null},
+    {n:'Anahí Calderón',  lv:'T0',      m:null},
+  ]},
+];
+
+const GS={};
+
+function hrs(lv){return(RH[lv]||0)+(FH[lv]||0);}
+function load(c){return Math.round(c.members.reduce((s,m)=>s+hrs(m.lv),0));}
+function cst(u){const p=u/AVAIL;return p<.75?'ok':p<.95?'warn':'over';}
+function lvcls(lv){const mp={PM:'lv-pm','PM-T':'lv-pmt',Especializado:'lv-esp',Analista:'lv-ana',T0:'lv-t0',T1:'lv-t1',T2:'lv-t2'};return mp[lv]||'lv-ana';}
+function lvlbl(lv){return lv==='Especializado'?'ESPEC.':lv;}
+
+const SCW = {AZUL:5,VERDE:4,AMARILLO:2,ROJO:1,null:0};
+function scoreW(s){return SCW[s]||0;}
+const BARCOL = {AZUL:'#60a0ff',VERDE:'#60f0a0',AMARILLO:'#f0b060',ROJO:'#f06060',null:'#2e2e38'};
+
+function dotHtml(sc){
+  const cls = sc?`dot-${sc}`:'dot-nd';
+  return `<span class="dot ${cls}" title="${sc||'S/D'}"></span>`;
+}
+
+function trendArrow(hist){
+  const vals = hist.filter(s=>s!=null);
+  if(vals.length < 2) return '';
+  const last = scoreW(vals[vals.length-1]);
+  const prev = scoreW(vals[vals.length-2]);
+  if(last > prev) return '<span class="trend-arrow arr-up">▲</span>';
+  if(last < prev) return '<span class="trend-arrow arr-down">▼</span>';
+  return '<span class="trend-arrow arr-flat">→</span>';
+}
+
+function consistency(hist){
+  const vals = hist.filter(s=>s!=null);
+  if(vals.length < 3) return {label:'NUEVA',cls:'cb-nueva'};
+  const good = vals.filter(s=>s==='AZUL'||s==='VERDE'||s==='MORADO').length;
+  const bad  = vals.filter(s=>s==='ROJO').length;
+  const ratio = good/vals.length;
+  if(ratio >= 0.8 && bad === 0) return {label:'ALTA',cls:'cb-alta'};
+  if(ratio >= 0.5) return {label:'MEDIA',cls:'cb-media'};
+  return {label:'BAJA',cls:'cb-baja'};
+}
+
+// ─── SUMMARY ─────────────────────────────────────────────────────────────────
+function renderSummary(){
+  const all=CELLS.flatMap(c=>c.members);
+  const tr=all.filter(m=>['T0','T1','T2'].includes(m.lv));
+  const es=all.filter(m=>m.lv==='Especializado');
+  const esNM=es.filter(e=>{const c=CELLS.find(c=>c.members.some(m=>m.n===e.n));return!c.members.some(m=>m.m===e.n&&['T0','T1','T2','Analista'].includes(m.lv));});
+  // Consistencia alta = candidatos a promoción
+  const altaConsis = Object.entries(HIST).filter(([n,v])=>{
+    const con=consistency(v.h);
+    const miembro=all.find(m=>m.n===n);
+    return con.label==='ALTA' && miembro && (miembro.lv==='Analista'||miembro.lv==='T0'||miembro.lv==='T1'||miembro.lv==='T2');
+  }).length;
+  const items=[
+    {num:CELLS.length,label:'Células activas',cls:'s-accent'},
+    {num:all.length,label:'Personas en equipo',cls:'s-blue'},
+    {num:tr.length,label:'Trainings activos',cls:'s-warn'},
+    {num:es.length,label:'Especializados',cls:'s-green'},
+    {num:esNM.length,label:'Esp. sin mentee',cls:esNM.length>0?'s-danger':'s-green'},
+    {num:altaConsis,label:'Consistencia alta ★',cls:'s-green'},
+  ];
+  document.getElementById('SG').innerHTML=items.map(i=>`<div class="summary-card ${i.cls}"><div class="num">${i.num}</div><div class="label">${i.label}</div></div>`).join('');
+}
+
+// ─── CELLS VIEW ──────────────────────────────────────────────────────────────
+function renderCells(){
+  document.getElementById('CG').innerHTML=CELLS.map(cell=>{
+    const used=load(cell),pct=Math.min(100,Math.round(used/AVAIL*100));
+    const st=cst(used);
+    const cc=st==='ok'?'cap-ok':st==='warn'?'cap-warn':'cap-over';
+    const fc=st==='ok'?'fill-ok':st==='warn'?'fill-warn':'fill-over';
+    const cl=st==='ok'?'OK':st==='warn'?'ATENCIÓN':'SOBRECARGA';
+
+    const mems=cell.members.map(m=>{
+      const isE=m.lv==='Especializado';
+      const mentee=cell.members.find(x=>x.m===m.n&&['T0','T1','T2','Analista'].includes(x.lv));
+      const noM=isE&&!mentee;
+      const arr=isE&&mentee?`<span class="m-arr">→ ${mentee.n}</span>`:'';
+      const hd = HIST[m.n];
+      const dots = m.lv!=='PM'&&m.lv!=='PM-T' && hd
+        ? `<div class="trend-dots">${hd.h.map(s=>dotHtml(s)).join('')}${trendArrow(hd.h)}</div>`
+        : '';
+      return `<div class="member-row">
+        <span class="lv ${lvcls(m.lv)}">${lvlbl(m.lv)}</span>
+        <span class="mname">${m.n}${noM?'<span class="no-m">sin mentee</span>':''}${arr}</span>
+        ${dots}
+      </div>`;
+    }).join('');
+
+    const ptLv=cell.pt==='PM-T'?'lv-pmt':'lv-pm';
+    return `<div class="cell-card">
+      <div class="cell-header">
+        <div><div class="cell-pm-name">${cell.pm}</div>
+        <div class="cell-pm-sub"><span class="lv ${ptLv}" style="font-size:8px">${cell.pt}</span>${cell.pt==='PM-T'?'<span class="pmt-tag">en formación</span>':''}</div></div>
+        <span class="capacity-badge ${cc}">${cl}</span>
+      </div>
+      <div class="cap-bar-wrap">
+        <div class="cap-bar-labels"><span>${used} hrs demanda</span><span>${pct}%</span></div>
+        <div class="cap-bar"><div class="cap-bar-fill ${fc}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="members-list">${mems}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── TENDENCIA VIEW ───────────────────────────────────────────────────────────
+function renderTrend(){
+  const all=CELLS.flatMap(c=>c.members.map(m=>({...m,cellPM:c.pm})));
+  // Solo operativos (no PMs)
+  const ops=all.filter(m=>!['PM','PM-T'].includes(m.lv));
+
+  // Ordenar: primero por consistencia (alta→media→baja→nueva), luego por score reciente
+  const ranked = ops.map(m=>{
+    const hd=HIST[m.n]||{h:[null,null,null,null,null]};
+    const con=consistency(hd.h);
+    const lastScore=scoreW(hd.h.filter(s=>s!=null).slice(-1)[0]);
+    const order={ALTA:0,MEDIA:1,BAJA:3,NUEVA:2}[con.label];
+    return {...m, hd, con, lastScore, order};
+  }).sort((a,b)=>a.order-b.order||b.lastScore-a.lastScore);
+
+  document.getElementById('TG').innerHTML=ranked.map(m=>{
+    const rows=MESES.map((mes,i)=>{
+      const sc=m.hd.h[i];
+      if(i===3) return ''; // enero sin dato
+      const col=BARCOL[sc]||BARCOL[null];
+      const w=sc?Math.round(scoreW(sc)/5*100):8;
+      return `<div class="trend-row">
+        <span class="trend-mes">${mes}</span>
+        <div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${w}%;background:${col}"></div></div>
+        <span class="trend-sc-dot" style="background:${col}"></span>
+        <span class="trend-val">${sc||'S/D'}</span>
+      </div>`;
+    }).join('');
+
+    return `<div class="trend-card">
+      <div class="trend-card-head">
+        <div>
+          <div class="trend-name">${m.n}</div>
+          <div class="trend-meta"><span class="lv ${lvcls(m.lv)}" style="display:inline-block;margin-right:4px">${lvlbl(m.lv)}</span>${m.cellPM}</div>
+        </div>
+        <span class="consistency-badge ${m.con.cls}">${m.con.label}</span>
+      </div>
+      <div class="trend-body">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── GRADUATION VIEW ─────────────────────────────────────────────────────────
+function renderGrad(){
+  const rows=[];
+  CELLS.forEach(cell=>cell.members.forEach(m=>{
+    if(!['T0','T1','T2'].includes(m.lv))return;
+    if(!GS[m.n])GS[m.n]={mo:1,inc:0};
+    const d=GS[m.n];
+    let rs='no',rl='No aún';
+    if(m.lv==='T0'&&d.mo>=3&&d.inc<=2)rs='yes';
+    else if(m.lv==='T0'&&d.mo>=2&&d.inc<=3)rs='soon';
+    else if(m.lv==='T1'&&d.mo>=3&&d.inc<=1)rs='yes';
+    else if(m.lv==='T1'&&d.mo>=2&&d.inc<=2)rs='soon';
+    else if(m.lv==='T2'&&d.mo>=2&&d.inc===0)rs='yes';
+    else if(m.lv==='T2'&&d.mo>=1&&d.inc<=1)rs='soon';
+    if(rs==='yes')rl='✓ Listo';
+    else if(rs==='soon')rl='≈ Pronto';
+    const rc=rs==='yes'?'rb-yes':rs==='soon'?'rb-soon':'rb-no';
+    const mn=m.m||'—';
+    const hd=HIST[m.n]||{h:[null,null,null,null,null]};
+    const con=consistency(hd.h);
+    const dots=`<div class="trend-dots" style="gap:3px">${hd.h.map(s=>dotHtml(s)).join('')}${trendArrow(hd.h)}</div>`;
+    const lastSc=hd.h.filter(s=>s!=null).slice(-1)[0];
+    const lastCol=BARCOL[lastSc]||BARCOL[null];
+    rows.push(`<tr>
+      <td><strong>${m.n}</strong></td>
+      <td><span class="lv ${lvcls(m.lv)}">${m.lv}</span></td>
+      <td style="color:var(--text-muted);font-size:11px">${cell.pm}</td>
+      <td style="color:var(--text-muted);font-size:11px;font-family:'DM Mono',monospace">${mn}</td>
+      <td>${dots}</td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:${lastCol}">${lastSc||'S/D'}</span>
+          <span class="consistency-badge ${con.cls}" style="margin-left:4px">${con.label}</span></td>
+      <td><input class="ni" type="number" min="0" max="24" value="${d.mo}" onchange="ug('${m.n}','mo',this.value)"></td>
+      <td><input class="ni" type="number" min="0" max="99" value="${d.inc}" onchange="ug('${m.n}','inc',this.value)"></td>
+      <td><span class="rb ${rc}">${rl}</span></td>
+    </tr>`);
+  }));
+  document.getElementById('GT').innerHTML=rows.join('');
+}
+function ug(n,f,v){if(!GS[n])GS[n]={mo:1,inc:0};GS[n][f]=parseInt(v)||0;renderGrad();}
+
+// ─── MENTORÍA ────────────────────────────────────────────────────────────────
+function renderMentors(){
+  const esps=[];
+  CELLS.forEach(c=>c.members.forEach(m=>{if(m.lv==='Especializado')esps.push({...m,cell:c});}));
+  document.getElementById('MG').innerHTML=esps.map(e=>{
+    const trainees=e.cell.members.filter(m=>m.m===e.n&&['T0','T1','T2','Analista'].includes(m.lv));
+    const has=trainees.length>0;
+    const hde=HIST[e.n]||{h:[null,null,null,null,null]};
+    const cone=consistency(hde.h);
+    const ti=has?trainees.map(t=>{
+      const hdt=HIST[t.n]||{h:[null,null,null,null,null]};
+      const cont=consistency(hdt.h);
+      return `<div class="mt-row">
+        <span class="lv ${lvcls(t.lv)}">${t.lv}</span>
+        <span>${t.n}</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
+          <div class="trend-dots">${hdt.h.map(s=>dotHtml(s)).join('')}</div>
+          <span class="consistency-badge ${cont.cls}">${cont.label}</span>
+        </div>
+      </div>`;
+    }).join(''):`<div class="mc-empty">⚠ Sin training asignado — capacidad formadora ociosa</div>`;
+    return `<div class="mc">
+      <div class="mc-head">
+        <div>
+          <div class="mc-name">${e.n} <span class="consistency-badge ${cone.cls}" style="font-size:9px">${cone.label}</span></div>
+          <div class="mc-cell">Célula de ${e.cell.pm}</div>
+        </div>
+        ${!has?'<span class="mc-flag">sin mentee</span>':''}
+      </div>${ti}</div>`;
+  }).join('');
+}
+
+function showView(n,b){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+n).classList.add('active');
+  b.classList.add('active');
+}
+
+renderSummary();renderCells();renderTrend();renderGrad();renderMentors();
+</script>
+</body>
+</html>
